@@ -19,4 +19,11 @@ fun main() {
         .map { it.toUpperCase() }
         .forEach { println(it) }
     var c = Customer(email = "name@email.com")
+
+    val lazyValue: String by lazy {
+        println("computed!")
+        "Hello"
+    }
+    println(lazyValue)
+    println(lazyValue)
 }
