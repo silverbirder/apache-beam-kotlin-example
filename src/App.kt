@@ -14,7 +14,7 @@ data class Customer(val name: String = "default", val email: String)
 fun main() {
     val fruits = listOf("banana", "avocado", "apple", "kiwifruit")
     fruits
-        .filter { it.startsWith("a") }
+        .filter { it.startsWith("b") }
         .sortedBy { it }
         .map { it.toUpperCase() }
         .forEach { println(it) }
