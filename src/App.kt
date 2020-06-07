@@ -11,6 +11,7 @@ fun describe(obj: Any): String =
 
 data class Customer(val name: String = "default", val email: String)
 
+// @see https://dogwood008.github.io/kotlin-web-site-ja/docs/reference/
 fun main() {
     val fruits = listOf("banana", "avocado", "apple", "kiwifruit")
     fruits
@@ -26,4 +27,15 @@ fun main() {
     }
     println(lazyValue)
     println(lazyValue)
+
+    val ary = arrayOf(1,2,3)
+    var list = arrayListOf(1,2,3)
+    var mList = mutableListOf(1,2,3)
+    var map = mapOf("a" to "b")
+    var mMap = mutableMapOf("a" to "b")
+    var set = setOf(1, 2, 3)
+    // list: 順序持ち. 重複可
+    // Set: 順序持たない。重複不可
+    // Map: キーバリュー.
+    // list,set,mapはreadonly
 }
