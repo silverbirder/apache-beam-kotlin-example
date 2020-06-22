@@ -1,10 +1,12 @@
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.property.checkAll
 import main.kotlin.sum
 
-class MyTests : StringSpec({
-    "sum case" {
-        val result = sum(1,2)
-        result.shouldBe(3)
+class PropertyExample : StringSpec({
+    "String size" {
+        checkAll<Int, Int> { a, b ->
+            a + b shouldBe sum (a, b)
+        }
     }
 })
