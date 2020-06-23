@@ -16,6 +16,7 @@ dependencies {
     implementation 'org.codehaus.groovy:groovy-all:2.3.11'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.apache.beam:beam-sdks-java-core:2.22.0'
+    implementation 'org.apache.beam:beam-runners-direct-java:2.22.0'
     testImplementation 'junit:junit:4.12'
     testImplementation 'io.kotest:kotest-runner-junit5-jvm:4.0.7'
     testImplementation 'io.kotest:kotest-assertions-core-jvm:4.0.7'

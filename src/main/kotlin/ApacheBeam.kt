@@ -3,6 +3,7 @@ package main.kotlin
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.io.TextIO
 import org.apache.beam.sdk.metrics.Metrics
+import org.apache.beam.sdk.options.Default
 import org.apache.beam.sdk.options.Description
 import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
@@ -124,10 +125,11 @@ object WordCount {
      * Inherits standard configuration options.
      */
     interface WordCountOptions : PipelineOptions {
-        @get:String("gs://beam-samples/shakespeare/kinglear.txt")
+        @get:Default.String("./src/main/kotlin/kinglear.txt")
         @get:Description("Path of the file to read from")
         var inputFile: String?
 
+        @get:Default.String("./src/main/kotlin/kinglear_out.txt")
         @get:Description("Path of the file to write to")
         var output: String?
     }
