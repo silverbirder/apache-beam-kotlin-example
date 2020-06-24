@@ -1,3 +1,5 @@
+package test.kotlin
+
 import io.kotest.matchers.nulls.shouldNotBeNull
 import main.kotlin.WordCount.CountWords
 import org.apache.beam.sdk.Pipeline
