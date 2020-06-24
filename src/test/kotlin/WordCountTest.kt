@@ -17,7 +17,7 @@ class WordCountTest {
 
     @Test
     fun countWordsTest() {
-        val p: Pipeline = TestPipeline.create()
+        val p: Pipeline = TestPipeline.create().enableAbandonedNodeEnforcement(false)
 
         // Create a PCollection from the WORDS static input data.
         val input: PCollection<String> =
