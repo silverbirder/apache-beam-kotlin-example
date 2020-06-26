@@ -22,7 +22,6 @@ object Bitfyer {
 
         // textをread
         p.apply("ReadLines", TextIO.read().from(options.inputFile))
-            //
             .apply(CountWords())
             .apply(MapElements.via(FormatAsTextFn()))
             .apply("WriteCounts", TextIO.write().to(options.output))
@@ -54,14 +53,28 @@ object Bitfyer {
         }
     }
 
-    // PTransformというIFを実装、ResponseをPCollectionとしている書き方？
+    // PTransformというIFを実装
     class CountWords :
+        // https://beam.apache.org/releases/javadoc/2.2.0/org/apache/beam/sdk/transforms/PTransform.html
+        // input, output の形式。
         PTransform<PCollection<String?>, PCollection<KV<String, Long>>>() {
+        // PTransformは、expandを実装する必要がある
+        // https://beam.apache.org/releases/javadoc/2.2.0/org/apache/beam/sdk/transforms/PTransform.html#expand-InputT-
         override fun expand(lines: PCollection<String?>): PCollection<KV<String, Long>> {
+
+            // ParDo. Transformの中で基本的な処理？. (PTransformの中に、ParDo, GroupByKey, などある)
+            // ParDoは、DoFn を継承したものじゃないとだめ。
             val words =
                 lines.apply(
                     ParDo.of<String, String>(ExtractWordsFn())
                 )
+            // GroupByKeyは、キーとなるものでGroupByする
+            // Combineは、...
+            // https://beam.apache.org/documentation/transforms/java/aggregation/combine/ を読もう
+            // https://github.com/apache/beam/tree/master/examples/java/src/main/java/org/apache/beam/examples も読もう・
+            // CoGroupByKey ...
+            // Flatten ...
+            // Partition ...
             return words.apply(Count.perElement())
         }
     }
