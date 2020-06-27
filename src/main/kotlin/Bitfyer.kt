@@ -22,7 +22,7 @@ object Bitfyer {
 
         // textをread
         p.apply("ReadLines", TextIO.read().from(options.inputFile))
-            .apply(CountWords())
+            .apply(FilterBit())
             .apply(MapElements.via(FormatAsTextFn()))
             .apply("WriteCounts", TextIO.write().to(options.output))
         p.run().waitUntilFinish()
@@ -47,9 +47,28 @@ object Bitfyer {
         }
     }
 
-    class FormatAsTextFn : SimpleFunction<KV<String, Long>, String>() {
-        override fun apply(input: KV<String, Long>): String {
-            return input.key.toString() + ": " + input.value
+    internal class Extract: DoFn<String, KV<String, Int>>() {
+        @ProcessElement
+        fun processElement(c: ProcessContext) {
+            val el = c.element().split(',')
+            // BTC/JPY,bitflyer,1519845731987,1127174.0,1126166.0
+            val com = el[1]
+            val up = el[3].toDouble().toInt()
+            c.output(KV.of(com, up))
+        }
+    }
+
+    class FormatAsTextFn : SimpleFunction<KV<String, MutableIterable<Int>>, String>() {
+        override fun apply(input: KV<String, MutableIterable<Int>>): String {
+            return input.key + input.value.toString()
+        }
+    }
+
+    class FilterBit: PTransform<PCollection<String>, PCollection<KV<String, MutableIterable<Int>>>>() {
+        override fun expand(input: PCollection<String>): PCollection<KV<String, MutableIterable<Int>>>? {
+            return input
+                .apply(ParDo.of<String, KV<String, Int>>(Extract()))
+                .apply(GroupByKey.create<String, Int>())
         }
     }
 
