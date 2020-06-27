@@ -19,7 +19,6 @@ object Bitfyer {
         // ::class.javaは、クラスオブジェクトを取得する文法。
         val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(BitfyerOptions::class.java)
         val p = Pipeline.create(options)
-
         // textをread
         p.apply("ReadLines", TextIO.read().from(options.inputFile))
             .apply(FilterBit())
@@ -58,24 +57,37 @@ object Bitfyer {
         }
     }
 
-    class FormatAsTextFn : SimpleFunction<KV<String, MutableIterable<Int>>, String>() {
-        override fun apply(input: KV<String, MutableIterable<Int>>): String {
+    internal class Extract2 : DoFn<KV<String, Iterable<Int>>, KV<String, Int>>() {
+        @ProcessElement
+        fun processElement(@Element a: KV<String, Iterable<Int>>, receiver: OutputReceiver<KV<String, Int>>) {
+            receiver.output(KV.of("a", 1))
+        }
+    }
+
+    class FormatAsTextFn : SimpleFunction<KV<String, Int>, String>() {
+        override fun apply(input: KV<String, Int>): String {
             return input.key + input.value.toString()
         }
     }
 
-    class FilterBit: PTransform<PCollection<String>, PCollection<KV<String, MutableIterable<Int>>>>() {
-        override fun expand(input: PCollection<String>): PCollection<KV<String, MutableIterable<Int>>>? {
+    class FilterBit : PTransform<PCollection<String>, PCollection<KV<String, Int>>>() {
+        override fun expand(input: PCollection<String>): PCollection<KV<String, Int>>? {
             return input
-                .apply(ParDo.of<String, KV<String, Int>>(Extract()))
+                .apply(ParDo.of(Extract()))
                 .apply(GroupByKey.create<String, Int>())
+                .apply(ParDo.of(Extract2()))
+            // main.kotlin.Bitfyer$Extract2,
+            // @ProcessElement processElement(ProcessContext), @ProcessElement processElement(ProcessContext),
+            // parameter of type DoFn<KV<String, Iterable<Integer>>, KV<String, Integer>>.ProcessContext at index 0:
+            // ProcessContext argument must have type DoFn<KV<String, Iterable<? extends Integer>>, KV<String, Integer>>.ProcessContext
+
         }
     }
 
     // PTransformというIFを実装
     class CountWords :
-        // https://beam.apache.org/releases/javadoc/2.2.0/org/apache/beam/sdk/transforms/PTransform.html
-        // input, output の形式。
+    // https://beam.apache.org/releases/javadoc/2.2.0/org/apache/beam/sdk/transforms/PTransform.html
+    // input, output の形式。
         PTransform<PCollection<String?>, PCollection<KV<String, Long>>>() {
         // PTransformは、expandを実装する必要がある
         // https://beam.apache.org/releases/javadoc/2.2.0/org/apache/beam/sdk/transforms/PTransform.html#expand-InputT-
