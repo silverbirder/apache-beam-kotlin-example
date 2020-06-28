@@ -7,8 +7,7 @@ import org.apache.beam.sdk.options.Default
 import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.transforms.*
-import org.apache.beam.sdk.values.KV
-import org.apache.beam.sdk.values.PCollection
+import org.apache.beam.sdk.values.*
 
 object Bitfyer {
     @JvmStatic // objectのmethodをstaticにcallしたい場合、JvmStaticをつけるらしい
@@ -72,10 +71,20 @@ object Bitfyer {
 
     class FilterBit : PTransform<PCollection<String>, PCollection<KV<String, Int>>>() {
         override fun expand(input: PCollection<String>): PCollection<KV<String, Int>>? {
-            return input
-                .apply(ParDo.of(Extract()))
-                .apply(GroupByKey.create<String, Int>())
-                .apply(ParDo.of(Extract2()))
+//            val type =
+//                Schema.builder().addMapField("KV",
+//                    Schema.FieldType.STRING,
+//                    Schema.FieldType.array(Schema.FieldType.INT64)).build()
+            var a = input.apply(ParDo.of(Extract()))
+            var b = a.apply(GroupByKey.create<String, Int>())
+//                .setSchema(
+//                    type,
+//                    TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.iterables(TypeDescriptors.integers())),
+//                    SerializableFunctions.constant<KV<String, Iterable<Int>>, Row>(Row.withSchema(type).build()),
+//                    SerializableFunctions.constant<Row, KV<String, Iterable<Int>>>(KV.of("", listOf(1)))
+//                )
+            var c = b.apply(ParDo.of(Extract2()))
+            return c
             // main.kotlin.Bitfyer$Extract2,
             // @ProcessElement processElement(ProcessContext), @ProcessElement processElement(ProcessContext),
             // parameter of type DoFn<KV<String, Iterable<Integer>>, KV<String, Integer>>.ProcessContext at index 0:
