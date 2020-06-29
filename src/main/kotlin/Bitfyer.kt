@@ -8,6 +8,7 @@ import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.transforms.*
 import org.apache.beam.sdk.values.*
+import java.lang.Iterable as JavaIterable
 
 object Bitfyer {
     @JvmStatic // objectのmethodをstaticにcallしたい場合、JvmStaticをつけるらしい
@@ -56,10 +57,14 @@ object Bitfyer {
         }
     }
 
-    internal class Extract2 : DoFn<KV<String, Iterable<Int>>, KV<String, Int>>() {
+    internal class Extract2 : DoFn<KV<String, JavaIterable<Int>>, KV<String, Int>>() {
         @ProcessElement
-        fun processElement(@Element a: KV<String, Iterable<Int>>, receiver: OutputReceiver<KV<String, Int>>) {
-            receiver.output(KV.of("a", 1))
+        fun processElement(@Element a: KV<String, JavaIterable<Int>>, receiver: OutputReceiver<KV<String, Int>>) {
+            var sum = 0
+            a.value.forEach{
+                sum += it
+            }
+            receiver.output(KV.of(a.key, sum))
         }
     }
 
@@ -76,7 +81,7 @@ object Bitfyer {
 //                    Schema.FieldType.STRING,
 //                    Schema.FieldType.array(Schema.FieldType.INT64)).build()
             var a = input.apply(ParDo.of(Extract()))
-            var b = a.apply(GroupByKey.create<String, Int>())
+            var b = a.apply(GroupByKey.create<String, Int>()) as PCollection<KV<String, JavaIterable<Int>>>
 //                .setSchema(
 //                    type,
 //                    TypeDescriptors.kvs(TypeDescriptors.strings(), TypeDescriptors.iterables(TypeDescriptors.integers())),
