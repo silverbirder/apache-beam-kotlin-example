@@ -59,12 +59,13 @@ object Bitfyer {
 
     internal class Extract2 : DoFn<KV<String, JavaIterable<Int>>, KV<String, Int>>() {
         @ProcessElement
-        fun processElement(@Element a: KV<String, JavaIterable<Int>>, receiver: OutputReceiver<KV<String, Int>>) {
+        fun processElement(c: ProcessContext) {
+            val el = c.element()
             var sum = 0
-            a.value.forEach{
+            el.value.forEach {
                 sum += it
             }
-            receiver.output(KV.of(a.key, sum))
+            c.output(KV.of(el.key, sum))
         }
     }
 
