@@ -31,7 +31,8 @@ object Bitfyer {
             var pa = pc.apply(Flatten.pCollections())
 //            var b = a.apply(GroupByKey.create<String, Int>()) as PCollection<KV<String, JavaIterable<Int>>>
             var d = pa.apply(Sum.integersPerKey())
-            return d
+            var u = d.apply<PCollection<KV<String, Int>>>(Combine.perKey(SumInt()))
+            return u
         }
     }
 
@@ -54,6 +55,12 @@ object Bitfyer {
                 sum += it
             }
             c.output(KV.of(el.key, sum))
+        }
+    }
+
+    internal class SumInt : SerializableFunction<Iterable<Int>, Int> {
+        override fun apply(input: Iterable<Int>): Int {
+            return input.sum()
         }
     }
 
