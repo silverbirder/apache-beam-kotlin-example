@@ -27,8 +27,10 @@ object Bitfyer {
     class FilterBit : PTransform<PCollection<String>, PCollection<KV<String, Int>>>() {
         override fun expand(input: PCollection<String>): PCollection<KV<String, Int>>? {
             var a = input.apply(ParDo.of(Extract()))
+            var pc = PCollectionList.of(a).and(a)
+            var pa = pc.apply(Flatten.pCollections())
 //            var b = a.apply(GroupByKey.create<String, Int>()) as PCollection<KV<String, JavaIterable<Int>>>
-            var d = a.apply(Sum.integersPerKey())
+            var d = pa.apply(Sum.integersPerKey())
             return d
         }
     }
