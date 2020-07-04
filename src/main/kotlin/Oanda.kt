@@ -16,9 +16,9 @@ import org.apache.beam.sdk.values.PCollection
 
 @DefaultCoder(AvroCoder::class)
 data class OandaJson(
-    val instrument: String,
-    val granularity: Granularity,
-    val candles: List<Candlestick>
+    val instrument: String = "",
+    val granularity: Granularity = Granularity.S5,
+    val candles: List<Candlestick> = listOf()
 )
 
 enum class Granularity {
@@ -26,19 +26,19 @@ enum class Granularity {
 }
 
 data class Candlestick(
-    val time: String,
-    val bid: CandlestickData?,
-    val ask: CandlestickData?,
-    val mid: CandlestickData?,
-    val volume: Int,
-    val complete: Boolean
+    val time: String = "",
+    val bid: CandlestickData? = CandlestickData(o = "", h = "", l = "", c = ""),
+    val ask: CandlestickData? = CandlestickData(o = "", h = "", l = "", c = ""),
+    val mid: CandlestickData? = CandlestickData(o = "", h = "", l = "", c = ""),
+    val volume: Int = 0,
+    val complete: Boolean = false
 )
 
 data class CandlestickData(
-    val o: String,
-    val h: String,
-    val l: String,
-    val c: String
+    val o: String = "",
+    val h: String = "",
+    val l: String = "",
+    val c: String = ""
 )
 
 object Oanda {
@@ -54,23 +54,23 @@ object Oanda {
         p.run().waitUntilFinish()
     }
 
-    internal class Transform : PTransform<PCollection<String>, PCollection<KV<String, String>>>() {
-        override fun expand(input: PCollection<String>): PCollection<KV<String, String>> {
+    internal class Transform : PTransform<PCollection<String>, PCollection<KV<String, OandaJson>>>() {
+        override fun expand(input: PCollection<String>): PCollection<KV<String, OandaJson>> {
             return input.apply(ParDo.of(JsonToData()))
         }
     }
 
-    internal class JsonToData : DoFn<String, KV<String, String>>() {
+    internal class JsonToData : DoFn<String, KV<String, OandaJson>>() {
         @ProcessElement
         fun processElement(c: ProcessContext) {
             val mapper = jacksonObjectMapper()
             val o = mapper.readValue<OandaJson>(c.element())
-            c.output(KV.of(o.instrument, o.granularity.toString()))
+            c.output(KV.of(o.instrument, o))
         }
     }
 
-    internal class Format : SimpleFunction<KV<String, String>, String>() {
-        override fun apply(input: KV<String, String>): String {
+    internal class Format : SimpleFunction<KV<String, OandaJson>, String>() {
+        override fun apply(input: KV<String, OandaJson>): String {
             return "" + input.key
         }
     }
