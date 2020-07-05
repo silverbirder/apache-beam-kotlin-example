@@ -12,6 +12,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.transforms.*
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.apache.beam.sdk.values.PCollectionList
 import java.lang.Iterable as JavaIterable
 
 
@@ -30,10 +31,10 @@ data class FlattenOandaJson(
     val time: String = "",
     val volume: Int = 0,
     val complete: Boolean = false,
-    val o: Long = 0,
-    val h: Long = 0,
-    val l: Long = 0,
-    val c: Long = 0
+    val o: Double = 0.0,
+    val h: Double = 0.0,
+    val l: Double = 0.0,
+    val c: Double = 0.0
 )
 
 enum class Granularity {
@@ -69,8 +70,8 @@ object Oanda {
         p.run().waitUntilFinish()
     }
 
-    internal class Transform : PTransform<PCollection<String>, PCollection<KV<String, JavaIterable<FlattenOandaJson>>>>() {
-        override fun expand(input: PCollection<String>): PCollection<KV<String, JavaIterable<FlattenOandaJson>>> {
+    internal class Transform : PTransform<PCollection<String>, PCollection<JavaIterable<FlattenOandaJson>>>() {
+        override fun expand(input: PCollection<String>): PCollection<JavaIterable<FlattenOandaJson>> {
             return input
                 .apply(ParDo.of(JsonToData()))
                 .apply(ParDo.of(FlattenCandles()))
@@ -86,7 +87,7 @@ object Oanda {
         }
     }
 
-    internal class FlattenCandles : DoFn<KV<String, OandaJson>, KV<String, JavaIterable<FlattenOandaJson>>>() {
+    internal class FlattenCandles : DoFn<KV<String, OandaJson>, JavaIterable<FlattenOandaJson>>() {
         @ProcessElement
         fun processElement(c: ProcessContext) {
             val el = c.element()
@@ -95,28 +96,28 @@ object Oanda {
             val flattenOanda = mutableListOf<FlattenOandaJson>()
             candles.map {
                 var type = ""
-                var o: Long = 0
-                var h: Long = 0
-                var l: Long = 0
-                var c: Long = 0
-                if (it.ask !== null) {
+                var o = 0.0
+                var h = 0.0
+                var l = 0.0
+                var c = 0.0
+                if (it.ask.hashCode() !== 0 && it.ask !== null) {
                     type = "ask"
-                    o = it.ask.o.toLong()
-                    h = it.ask.h.toLong()
-                    l = it.ask.l.toLong()
-                    c = it.ask.c.toLong()
-                } else if (it.bid !== null) {
+                    o = it.ask.o.toDouble()
+                    h = it.ask.h.toDouble()
+                    l = it.ask.l.toDouble()
+                    c = it.ask.c.toDouble()
+                } else if (it.bid.hashCode() !== 0 && it.bid !== null) {
                     type = "bid"
-                    o = it.bid.o.toLong()
-                    h = it.bid.h.toLong()
-                    l = it.bid.l.toLong()
-                    c = it.bid.c.toLong()
-                } else if (it.mid !== null){
+                    o = it.bid.o.toDouble()
+                    h = it.bid.h.toDouble()
+                    l = it.bid.l.toDouble()
+                    c = it.bid.c.toDouble()
+                } else if (it.mid.hashCode() !== 0 && it.mid !== null){
                     type = "mid"
-                    o = it.mid.o.toLong()
-                    h = it.mid.h.toLong()
-                    l = it.mid.l.toLong()
-                    c = it.mid.c.toLong()
+                    o = it.mid.o.toDouble()
+                    h = it.mid.h.toDouble()
+                    l = it.mid.l.toDouble()
+                    c = it.mid.c.toDouble()
                 }
                 flattenOanda.add(
                     FlattenOandaJson(
@@ -133,13 +134,13 @@ object Oanda {
                     )
                 )
             }
-            c.output(KV.of(el.key, flattenOanda as JavaIterable<FlattenOandaJson>))
+            c.output(flattenOanda as JavaIterable<FlattenOandaJson>)
         }
     }
 
-    internal class Format : SimpleFunction<KV<String, JavaIterable<FlattenOandaJson>>, String>() {
-        override fun apply(input: KV<String, JavaIterable<FlattenOandaJson>>): String {
-            return "" + input.key
+    internal class Format : SimpleFunction<JavaIterable<FlattenOandaJson>, String>() {
+        override fun apply(input: JavaIterable<FlattenOandaJson>): String {
+            return "" + input.toString()
         }
     }
 
