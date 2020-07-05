@@ -33,7 +33,11 @@ data class FlattenOandaJson(
     val h: Double = 0.0,
     val l: Double = 0.0,
     val c: Double = 0.0
-)
+) {
+    override fun toString(): String {
+        return "${this.instrument},${this.time},${this.granularity},${this.type},${this.volume},${this.complete},${this.o},${this.h},${this.l},${this.c}"
+    }
+}
 
 enum class Granularity {
     S5, S10, S15, S30, M1, M2, M4, M5, M10, M15, M30, H1, H2, H3, H4, H6, H8, H12, D, W, M
@@ -110,7 +114,7 @@ object Oanda {
                     hp = it.bid.h.toDouble()
                     lp = it.bid.l.toDouble()
                     cp = it.bid.c.toDouble()
-                } else if (it.mid.hashCode() !== 0 && it.mid !== null){
+                } else if (it.mid.hashCode() !== 0 && it.mid !== null) {
                     type = "mid"
                     op = it.mid.o.toDouble()
                     hp = it.mid.h.toDouble()
@@ -136,7 +140,7 @@ object Oanda {
 
     internal class Format : SimpleFunction<KV<String, FlattenOandaJson>, String>() {
         override fun apply(input: KV<String, FlattenOandaJson>): String {
-            return "${input.key},${input.value.time}"
+            return input.value.toString()
         }
     }
 
