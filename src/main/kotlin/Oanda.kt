@@ -12,8 +12,6 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.transforms.*
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
-import org.apache.beam.sdk.values.PCollectionList
-import java.lang.Iterable as JavaIterable
 
 
 @DefaultCoder(AvroCoder::class)
@@ -70,8 +68,8 @@ object Oanda {
         p.run().waitUntilFinish()
     }
 
-    internal class Transform : PTransform<PCollection<String>, PCollection<JavaIterable<FlattenOandaJson>>>() {
-        override fun expand(input: PCollection<String>): PCollection<JavaIterable<FlattenOandaJson>> {
+    internal class Transform : PTransform<PCollection<String>, PCollection<KV<String, FlattenOandaJson>>>() {
+        override fun expand(input: PCollection<String>): PCollection<KV<String, FlattenOandaJson>> {
             return input
                 .apply(ParDo.of(JsonToData()))
                 .apply(ParDo.of(FlattenCandles()))
@@ -87,7 +85,7 @@ object Oanda {
         }
     }
 
-    internal class FlattenCandles : DoFn<KV<String, OandaJson>, JavaIterable<FlattenOandaJson>>() {
+    internal class FlattenCandles : DoFn<KV<String, OandaJson>, KV<String, FlattenOandaJson>>() {
         @ProcessElement
         fun processElement(c: ProcessContext) {
             val el = c.element()
@@ -96,51 +94,49 @@ object Oanda {
             val flattenOanda = mutableListOf<FlattenOandaJson>()
             candles.map {
                 var type = ""
-                var o = 0.0
-                var h = 0.0
-                var l = 0.0
-                var c = 0.0
+                var op = 0.0
+                var hp = 0.0
+                var lp = 0.0
+                var cp = 0.0
                 if (it.ask.hashCode() !== 0 && it.ask !== null) {
                     type = "ask"
-                    o = it.ask.o.toDouble()
-                    h = it.ask.h.toDouble()
-                    l = it.ask.l.toDouble()
-                    c = it.ask.c.toDouble()
+                    op = it.ask.o.toDouble()
+                    hp = it.ask.h.toDouble()
+                    lp = it.ask.l.toDouble()
+                    cp = it.ask.c.toDouble()
                 } else if (it.bid.hashCode() !== 0 && it.bid !== null) {
                     type = "bid"
-                    o = it.bid.o.toDouble()
-                    h = it.bid.h.toDouble()
-                    l = it.bid.l.toDouble()
-                    c = it.bid.c.toDouble()
+                    op = it.bid.o.toDouble()
+                    hp = it.bid.h.toDouble()
+                    lp = it.bid.l.toDouble()
+                    cp = it.bid.c.toDouble()
                 } else if (it.mid.hashCode() !== 0 && it.mid !== null){
                     type = "mid"
-                    o = it.mid.o.toDouble()
-                    h = it.mid.h.toDouble()
-                    l = it.mid.l.toDouble()
-                    c = it.mid.c.toDouble()
+                    op = it.mid.o.toDouble()
+                    hp = it.mid.h.toDouble()
+                    lp = it.mid.l.toDouble()
+                    cp = it.mid.c.toDouble()
                 }
-                flattenOanda.add(
-                    FlattenOandaJson(
-                        instrument = oanda.instrument,
-                        granularity = oanda.granularity,
-                        type = type,
-                        time = it.time,
-                        volume = it.volume,
-                        complete = it.complete,
-                        o = o,
-                        h = h,
-                        l = l,
-                        c = c
-                    )
+                val flattenObject = FlattenOandaJson(
+                    instrument = oanda.instrument,
+                    granularity = oanda.granularity,
+                    type = type,
+                    time = it.time,
+                    volume = it.volume,
+                    complete = it.complete,
+                    o = op,
+                    h = hp,
+                    l = lp,
+                    c = cp
                 )
+                c.output(KV.of(el.key, flattenObject))
             }
-            c.output(flattenOanda as JavaIterable<FlattenOandaJson>)
         }
     }
 
-    internal class Format : SimpleFunction<JavaIterable<FlattenOandaJson>, String>() {
-        override fun apply(input: JavaIterable<FlattenOandaJson>): String {
-            return "" + input.toString()
+    internal class Format : SimpleFunction<KV<String, FlattenOandaJson>, String>() {
+        override fun apply(input: KV<String, FlattenOandaJson>): String {
+            return "${input.key},${input.value.time}"
         }
     }
 
