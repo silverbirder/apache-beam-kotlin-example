@@ -1,1 +1,4 @@
-run: ./gradlew run
+run:
+	./gradlew run --args=" \
+	--output=hoge.txt \
+	"

@@ -36,5 +36,5 @@ compileTestKotlin {
 
 
 application {
-    mainClassName = 'main.kotlin.WordCount'
+    mainClassName = 'main.kotlin.Oanda'
 }
