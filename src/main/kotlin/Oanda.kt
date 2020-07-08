@@ -10,8 +10,12 @@ import org.apache.beam.sdk.options.Default
 import org.apache.beam.sdk.options.PipelineOptions
 import org.apache.beam.sdk.options.PipelineOptionsFactory
 import org.apache.beam.sdk.transforms.*
+import org.apache.beam.sdk.transforms.Watch.Growth.afterTimeSinceNewOutput
+import org.apache.beam.sdk.transforms.windowing.FixedWindows
+import org.apache.beam.sdk.transforms.windowing.Window
 import org.apache.beam.sdk.values.KV
 import org.apache.beam.sdk.values.PCollection
+import org.joda.time.Duration.*
 
 
 @DefaultCoder(AvroCoder::class)
@@ -65,10 +69,24 @@ object Oanda {
         val options = PipelineOptionsFactory.fromArgs(*args).withValidation().`as`(OandaOptions::class.java)
         val p = Pipeline.create(options)
         p
-            .apply("ReadLines", TextIO.read().from(options.inputFile))
+            .apply(
+                "ReadLines",
+                TextIO
+                    .read()
+                    .from("./src/main/kotlin/*.json")
+                    .watchForNewFiles(
+                        standardSeconds(30), afterTimeSinceNewOutput(standardMinutes(5))
+                    )
+            ).apply(Window.into<String>(FixedWindows.of(standardMinutes(1))))
             .apply("Transform", Transform())
             .apply("Format", MapElements.via(Format()))
-            .apply("WriteLines", TextIO.write().to(options.output))
+            .apply(
+                "WriteLines", TextIO
+                    .write()
+                    .to(options.output)
+                    .withWindowedWrites()
+                    .withNumShards(1)
+            )
         p.run().waitUntilFinish()
     }
 
