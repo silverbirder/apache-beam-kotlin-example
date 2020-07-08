@@ -29,3 +29,7 @@ out
 build
 
 !gradle/wrapper/gradle-wrapper.jar
+
+src/main/kotlin/*.json
+src/main/kotlin/oanda_out.*
+src/main/kotlin/.temp-beam-*

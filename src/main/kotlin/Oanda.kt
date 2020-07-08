@@ -75,9 +75,9 @@ object Oanda {
                     .read()
                     .from("./src/main/kotlin/*.json")
                     .watchForNewFiles(
-                        standardSeconds(30), afterTimeSinceNewOutput(standardMinutes(5))
+                        standardSeconds(10), afterTimeSinceNewOutput(standardMinutes(5))
                     )
-            ).apply(Window.into<String>(FixedWindows.of(standardMinutes(1))))
+            ).apply(Window.into<String>(FixedWindows.of(standardSeconds(30))))
             .apply("Transform", Transform())
             .apply("Format", MapElements.via(Format()))
             .apply(
