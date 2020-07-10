@@ -1,6 +1,5 @@
 package test.kotlin
 
-import io.kotest.matchers.nulls.shouldNotBeNull
 import main.kotlin.WordCount.CountWords
 import org.apache.beam.sdk.Pipeline
 import org.apache.beam.sdk.coders.StringUtf8Coder
@@ -13,36 +12,30 @@ import org.junit.Test
 
 
 class WordCountTest {
-    // Example test that tests the pipeline's transforms.
-
     @Test
     fun countWordsTest() {
+        // Arrange
         val p: Pipeline = TestPipeline.create().enableAbandonedNodeEnforcement(false)
-
-        // Create a PCollection from the WORDS static input data.
-        val input: PCollection<String> =
-            p.apply(Create.of(WORDS)).setCoder(StringUtf8Coder.of())
-
-        // Run ALL the pipeline's transforms (in this case, the CountWords composite transform).
+        val input: PCollection<String> = p.apply(Create.of(WORDS)).setCoder(StringUtf8Coder.of())
         val output: PCollection<KV<String, Long>>? = input.apply(CountWords())
 
-        // Assert that the output PCollection matches the COUNTS_ARRAY known static output data.
-        PAssert.that<KV<String, Long>>(output).shouldNotBeNull()
-
-        // Run the pipeline.
+        // Act
         p.run()
+
+        // Assert
+        PAssert.that<KV<String, Long>>(output).containsInAnyOrder(COUNTS_ARRAY)
     }
 
     companion object {
-        // Our static input data, which will comprise the initial PCollection.
         val WORDS: List<String> = listOf(
             "hi there", "hi", "hi sue bob",
             "hi sue", "", "bob hi"
         )
-
-        // Our static output data, which is the expected data that the final PCollection must match.
-        val COUNTS_ARRAY = mapOf(
-            "hi" to 5, "there" to 1, "sue" to 2, "bob" to 2
+        val COUNTS_ARRAY = listOf(
+            KV.of("hi", 5L),
+            KV.of("there", 2L),
+            KV.of("sue", 2L),
+            KV.of("bob", 2L)
         )
     }
 }
